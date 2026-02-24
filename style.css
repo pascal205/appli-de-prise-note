@@ -1,0 +1,105 @@
+/* Style personnalisé pour l'application de notes */
+
+/* Animation pour les cartes de notes */
+.note-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+    opacity: 0;
+    animation: fadeIn 0.5s ease forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.note-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2) !important;
+}
+
+/* Style pour les boutons d'action */
+.note-actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.note-card:hover .note-actions {
+    opacity: 1;
+}
+
+/* Style pour le contenu tronqué */
+.note-content-preview {
+    max-height: 100px;
+    overflow: hidden;
+    position: relative;
+}
+
+.note-content-preview::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 30px;
+    background: linear-gradient(transparent, rgba(255,255,255,0.9));
+}
+
+/* Mode édition */
+.note-card.editing {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(1.1);
+    z-index: 1050;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3) !important;
+}
+
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1040;
+}
+
+.overlay.active {
+    display: block;
+}
+
+/* Style pour les badges de catégorie */
+.note-category {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 20px;
+    background: rgba(0,0,0,0.1);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .note-actions {
+        opacity: 1;
+        position: static;
+        text-align: right;
+        margin-top: 10px;
+    }
+    
+    .note-card.editing {
+        width: 95%;
+        margin: 10px;
+    }
+}

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon Application de Notes</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome pour les icônes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Notre CSS personnalisé -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <h1 class="text-center mb-4">
+            <i class="fas fa-sticky-note text-primary me-2"></i>
+            Mon Application de Notes
+        </h1>
+        
+        <div class="row">
+            <!-- Formulaire d'ajout de note -->
+            <div class="col-md-4 mb-4">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-plus-circle me-2"></i>
+                            Ajouter une note
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="noteForm">
+                            <div class="mb-3">
+                                <label for="noteTitle" class="form-label">Titre</label>
+                                <input type="text" class="form-control" id="noteTitle" placeholder="Titre de la note" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="noteContent" class="form-label">Contenu</label>
+                                <textarea class="form-control" id="noteContent" rows="4" placeholder="Écrivez votre note ici..." required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="noteColor" class="form-label">Couleur</label>
+                                <select class="form-select" id="noteColor">
+                                    <option value="bg-white">Blanc</option>
+                                    <option value="bg-warning">Jaune</option>
+                                    <option value="bg-info">Bleu</option>
+                                    <option value="bg-success text-white">Vert</option>
+                                    <option value="bg-danger text-white">Rouge</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-save me-2"></i>
+                                Enregistrer la note
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Liste des notes -->
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>
+                            Mes notes
+                        </h5>
+                        <div>
+                            <button class="btn btn-sm btn-light me-2" id="searchBtn">
+                                <i class="fas fa-search"></i>
+                            </button>
+                            <button class="btn btn-sm btn-light" id="deleteAllBtn">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Barre de recherche -->
+                        <div class="mb-3" id="searchBar" style="display: none;">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="searchInput" placeholder="Rechercher une note...">
+                                <button class="btn btn-outline-secondary" type="button" id="clearSearch">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Conteneur des notes -->
+                        <div id="notesContainer" class="row">
+                            <!-- Les notes seront affichées ici dynamiquement -->
+                        </div>
+                        
+                        <!-- Message si aucune note -->
+                        <div id="noNotesMessage" class="text-center text-muted py-5">
+                            <i class="fas fa-sticky-note fa-3x mb-3"></i>
+                            <p>Aucune note pour le moment. Commencez par en ajouter une !</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Notre JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>
