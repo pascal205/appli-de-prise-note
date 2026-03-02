@@ -73,6 +73,14 @@ class NotesApp {
         this.editFromViewBtn.addEventListener('click', () => this.editFromView());
         this.deleteFromViewBtn.addEventListener('click', () => this.deleteFromView());
         
+        // Bouton de confirmation de suppression
+        this.confirmDeleteBtn.addEventListener('click', () => {
+            if (this.deleteCallback) {
+                this.deleteCallback();
+                this.deleteModal.hide();
+            }
+        });
+        
         // Fermeture des modals
         document.getElementById('noteModal').addEventListener('hidden.bs.modal', () => this.resetForm());
     }
@@ -80,9 +88,6 @@ class NotesApp {
     initModals() {
         // Initialisation du sélecteur de couleurs
         this.initColorPicker();
-        
-        // Centrage automatique des modals (déjà géré par Bootstrap)
-        // Mais on s'assure que tous les modals ont la classe modal-dialog-centered
     }
 
     initColorPicker() {
@@ -152,7 +157,7 @@ class NotesApp {
             })
         };
 
-                this.notes.unshift(newNote);
+        this.notes.unshift(newNote);
         this.saveNotes();
         this.displayNotes();
         this.updateStats();
@@ -196,7 +201,6 @@ class NotesApp {
         this.displayNotes();
         this.updateStats();
         this.checkEmptyState();
-        this.deleteModal.hide();
         this.showNotification('Toutes les notes ont été supprimées', 'warning');
     }
 
@@ -301,13 +305,13 @@ class NotesApp {
                 <div class="note-header">
                     <h3 class="note-title">${this.escapeHtml(note.title)}</h3>
                     <div class="note-actions-modern">
-                        <button class="note-action-btn view" title="Voir" onclick="event.stopPropagation()">
+                        <button class="note-action-btn view" title="Voir" data-action="view">
                             <i class="fas fa-eye"></i>
                         </button>
-                        <button class="note-action-btn edit" title="Modifier" onclick="event.stopPropagation()">
+                        <button class="note-action-btn edit" title="Modifier" data-action="edit">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="note-action-btn delete" title="Supprimer" onclick="event.stopPropagation()">
+                        <button class="note-action-btn delete" title="Supprimer" data-action="delete">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -333,30 +337,44 @@ class NotesApp {
             const noteId = card.dataset.noteId;
             const note = this.notes.find(n => n.id === noteId);
 
+            if (!note) return; // Sécurité
+
             // Clic sur la carte pour voir la note
             card.addEventListener('click', (e) => {
+                // Ne pas déclencher si on clique sur un bouton
                 if (!e.target.closest('.note-action-btn')) {
                     this.viewNote(note);
                 }
             });
 
-            // Bouton voir
-            card.querySelector('.view').addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.viewNote(note);
-            });
+            // Gestionnaire d'événements pour les boutons
+            const viewBtn = card.querySelector('[data-action="view"]');
+            const editBtn = card.querySelector('[data-action="edit"]');
+            const deleteBtn = card.querySelector('[data-action="delete"]');
 
-            // Bouton modifier
-            card.querySelector('.edit').addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.openEditModal(note);
-            });
+            if (viewBtn) {
+                viewBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    this.viewNote(note);
+                });
+            }
 
-            // Bouton supprimer
-            card.querySelector('.delete').addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.openDeleteModal(note.id, note.title);
-            });
+            if (editBtn) {
+                editBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    this.openEditModal(note);
+                });
+            }
+
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    this.openDeleteModal(note.id, note.title);
+                });
+            }
         });
     }
 
@@ -399,11 +417,13 @@ class NotesApp {
     }
 
     resetForm() {
-        this.noteForm = document.getElementById('noteForm');
-        if (this.noteForm) {
-            this.noteForm.reset();
+        const form = document.getElementById('noteForm');
+        if (form) {
+            form.reset();
         }
-        this.noteColor.value = 'bg-white';
+        if (this.noteColor) {
+            this.noteColor.value = 'bg-white';
+        }
         document.querySelectorAll('.color-option').forEach(opt => {
             opt.classList.toggle('active', opt.dataset.color === 'bg-white');
         });
@@ -420,12 +440,19 @@ class NotesApp {
     }
 
     showNotification(message, type = 'info') {
+        // Supprimer les anciennes notifications
+        const oldNotifications = document.querySelectorAll('.notification');
+        oldNotifications.forEach(n => n.remove());
+
         // Créer l'élément de notification
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
+        
+        const icon = this.getNotificationIcon(type);
+        
         notification.innerHTML = `
             <div class="notification-icon">
-                <i class="fas ${this.getNotificationIcon(type)}"></i>
+                <i class="fas ${icon}"></i>
             </div>
             <div class="notification-content">
                 ${message}
@@ -464,249 +491,6 @@ class NotesApp {
 
 // Initialisation de l'application
 document.addEventListener('DOMContentLoaded', () => {
-    // S'assurer que tous les modals sont bien centrés
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => {
-        modal.addEventListener('show.bs.modal', function () {
-            document.body.style.paddingRight = '0px';
-        });
-    });
-
     // Lancer l'application
     window.app = new NotesApp();
 });
-
-// Ajout de styles supplémentaires pour les notifications
-const style = document.createElement('style');
-style.textContent = `
-    .notification {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 9999;
-        min-width: 300px;
-        padding: 1rem 1.5rem;
-        border-radius: 12px;
-        background: white;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        transform: translateX(400px);
-        animation: slideInNotification 0.3s ease forwards;
-        border-left: 4px solid;
-    }
-
-    @keyframes slideInNotification {
-        to {
-            transform: translateX(0);
-        }
-    }
-
-    .notification.success {
-        border-left-color: #48bb78;
-    }
-    .notification.success .notification-icon {
-        color: #48bb78;
-    }
-
-    .notification.error {
-        border-left-color: #f56565;
-    }
-    .notification.error .notification-icon {
-        color: #f56565;
-    }
-
-    .notification.warning {
-        border-left-color: #ed8936;
-    }
-    .notification.warning .notification-icon {
-        color: #ed8936;
-    }
-
-    .notification.info {
-        border-left-color: #4299e1;
-    }
-    .notification.info .notification-icon {
-        color: #4299e1;
-    }
-
-    .notification-icon {
-        font-size: 1.5rem;
-    }
-
-    .notification-content {
-        flex: 1;
-        font-size: 0.95rem;
-        color: #2d3748;
-    }
-
-    .notification-close {
-        background: none;
-        border: none;
-        color: #a0aec0;
-        cursor: pointer;
-        padding: 0;
-        font-size: 1rem;
-        transition: color 0.3s ease;
-    }
-
-    .notification-close:hover {
-        color: #4a5568;
-    }
-
-    /* Animation de fade out */
-    .notification.fade-out {
-        animation: fadeOutNotification 0.3s ease forwards;
-    }
-
-    @keyframes fadeOutNotification {
-        to {
-            opacity: 0;
-            transform: translateX(400px);
-        }
-    }
-
-    /* Amélioration du modal de visualisation */
-    #viewModal .modal-content {
-        border: none;
-    }
-
-    #viewModal .modal-header {
-        padding: 1.5rem;
-        border-bottom: none;
-    }
-
-    #viewModal .modal-header.bg-primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-    }
-
-    #viewModal .modal-body {
-        padding: 2rem;
-    }
-
-    .note-content-view {
-        font-size: 1.1rem;
-        line-height: 1.8;
-        color: #2d3748;
-        white-space: pre-wrap;
-        max-height: 60vh;
-        overflow-y: auto;
-        padding-right: 1rem;
-    }
-
-    .note-metadata {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-    }
-
-    /* Animation pour les nouvelles notes */
-    @keyframes highlightNew {
-        0% {
-            transform: scale(1);
-            box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
-        }
-        70% {
-            transform: scale(1.02);
-            box-shadow: 0 0 0 10px rgba(102, 126, 234, 0);
-        }
-        100% {
-            transform: scale(1);
-            box-shadow: 0 0 0 0 rgba(102, 126, 234, 0);
-        }
-    }
-
-    .note-card-modern.new {
-        animation: highlightNew 1s ease;
-    }
-
-    /* Style pour le bouton de confirmation dans le modal de suppression */
-    #confirmDeleteBtn {
-        background: linear-gradient(135deg, #f43b47 0%, #453a94 100%);
-        border: none;
-        transition: all 0.3s ease;
-    }
-
-    #confirmDeleteBtn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(244, 59, 71, 0.3);
-    }
-
-    /* Responsive pour les notifications */
-    @media (max-width: 640px) {
-        .notification {
-            top: 10px;
-            right: 10px;
-            left: 10px;
-            min-width: auto;
-            width: auto;
-        }
-    }
-
-    /* Amélioration du sélecteur de couleurs */
-    .color-picker {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 0.75rem;
-        margin-top: 0.5rem;
-    }
-
-    .color-option {
-        width: 100%;
-        aspect-ratio: 1;
-        border-radius: 12px;
-        cursor: pointer;
-        border: 3px solid transparent;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        position: relative;
-    }
-
-    .color-option:hover {
-        transform: scale(1.1);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    }
-
-    .color-option.active {
-        border-color: #667eea;
-        transform: scale(1.05);
-    }
-
-    .color-option.active::after {
-        content: '✓';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        color: white;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-        font-size: 1.2rem;
-        font-weight: bold;
-    }
-
-    /* Pour les couleurs sombres, l'icône doit être visible */
-    .color-option[data-color*="dark"] .active::after,
-    .color-option[data-color*="danger"] .active::after,
-    .color-option[data-color*="success"] .active::after {
-        color: white;
-    }
-
-    /* Animation de chargement */
-    .loading {
-        display: inline-block;
-        width: 50px;
-        height: 50px;
-        border: 3px solid rgba(102, 126, 234, 0.3);
-        border-radius: 50%;
-        border-top-color: #667eea;
-        animation: spin 1s ease-in-out infinite;
-    }
-
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-`;
-
-document.head.appendChild(style);
